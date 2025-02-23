@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fujiwara Farm</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script
-      src="https://kit.fontawesome.com/a076d05399.js"
-      crossorigin="anonymous"
-    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
   </head>
   <body class="bg-gray-900">
     <div
@@ -68,8 +68,13 @@
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
       ></div>
 
-      <h2 class="text-xl font-bold mt-6 mb-2">Notifikasi 🔔</h2>
+      <h2 class="text-xl font-bold mt-6 mb-2">Notifikasi Baru🔔</h2>
       <div id="notification-list"></div>
+      <h2 class="text-xl font-bold mt-6 mb-2 flex justify-between">
+        Notifikasi Lama🔔
+        <span id="toggleNotifications" class="text-blue-500 underline text-right"></span>
+      </h2>
+      <div id="old-notification-list"></div>
     </div>
 
     <script src="script.js"></script>

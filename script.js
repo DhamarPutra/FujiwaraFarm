@@ -4,6 +4,30 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPlants();
   checkNotifications();
   setInterval(checkNotifications, 30000);
+  const oldNotificationList = document.getElementById("old-notification-list");
+  const toggleIcon = document.getElementById("toggleNotifications");
+  const showOldNotifications =
+    localStorage.getItem("showOldNotifications") === "false";
+
+  if (showOldNotifications) {
+    oldNotificationList.style.display = "none";
+    toggleIcon.innerHTML = "show";
+  } else {
+    oldNotificationList.style.display = "block";
+    toggleIcon.innerHTML = "hidden";
+  }
+
+  toggleIcon.addEventListener("click", function () {
+    if (oldNotificationList.style.display === "none") {
+      oldNotificationList.style.display = "block";
+      toggleIcon.innerHTML = "hidden";
+      localStorage.setItem("showOldNotifications", "true");
+    } else {
+      oldNotificationList.style.display = "none";
+      toggleIcon.innerHTML = "show";
+      localStorage.setItem("showOldNotifications", "false");
+    }
+  });
 });
 
 // 🔹 Meminta izin notifikasi browser
@@ -54,6 +78,7 @@ function addPlant() {
     watered: false,
     pesticide: false,
     fertilizer: false,
+    moved: false,
   });
   localStorage.setItem("fujiwara_plants", JSON.stringify(plants));
 
@@ -66,6 +91,7 @@ function addPlant() {
 // 🔹 Load daftar tanaman
 function loadPlants() {
   const plants = JSON.parse(localStorage.getItem("fujiwara_plants") || "[]");
+  plants.sort((a, b) => new Date(a.date) - new Date(b.date));
   const plantList = document.getElementById("plant-list");
   plantList.innerHTML = "";
 
@@ -77,6 +103,7 @@ function loadPlants() {
           <p>💧 Disiram: ${plant.watered ? "✅" : "❌"}</p>
           <p>🐜 Pestisida: ${plant.pesticide ? "✅" : "❌"}</p>
           <p>🌱 Pupuk: ${plant.fertilizer ? "✅" : "❌"}</p>
+          <p>🪴 Dipindahkan: ${plant.moved ? "✅" : "❌"}</p>
         </div>
       `;
     plantList.innerHTML += plantCard;
@@ -97,7 +124,7 @@ function checkNotifications() {
       (new Date() - plantDate) / (1000 * 60 * 60 * 24)
     );
 
-    if (daysOld >= 14 && daysOld <= 21) {
+    if (daysOld >= 14) {
       scheduleNotification(
         `Pindahkan Bibit - ${plant.name}`,
         `Sudah ${daysOld} hari sejak semai.`,
@@ -176,6 +203,8 @@ function loadNotifications() {
   );
   const notificationList = document.getElementById("notification-list");
   notificationList.innerHTML = "";
+  const oldNotificationList = document.getElementById("old-notification-list");
+  oldNotificationList.innerHTML = "";
 
   notifications.forEach((notif, index) => {
     const today = new Date().toISOString().split("T")[0];
@@ -184,22 +213,36 @@ function loadNotifications() {
         `fujiwara_done_${notif.action}_${notif.title}_${today}`
       ) === "true";
 
-    notificationList.innerHTML += `
+    if (isDoneToday) {
+      oldNotificationList.innerHTML += `
         <div class="text-black bg-yellow-100 p-4 rounded shadow-md mb-2">
           <h3 class="font-bold">${notif.title}</h3>
           <p>${notif.message}</p>
           <p class="text-sm">${notif.date}</p>
           <button 
             onclick="completeNotification(${index})" 
-            class="mt-2 ${
-              isDoneToday ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500"
-            } text-white p-2 rounded"
-            ${isDoneToday ? "disabled" : ""}
+            class="mt-2 bg-gray-400 cursor-not-allowed text-white p-2 rounded"
+            disabled
           >
             Selesai
           </button>
         </div>
       `;
+    } else {
+      notificationList.innerHTML += `
+        <div class="text-black bg-yellow-100 p-4 rounded shadow-md mb-2">
+          <h3 class="font-bold">${notif.title}</h3>
+          <p>${notif.message}</p>
+          <p class="text-sm">${notif.date}</p>
+          <button 
+            onclick="completeNotification(${index})" 
+            class="mt-2 bg-blue-500 text-white p-2 rounded"
+          >
+            Selesai
+          </button>
+        </div>
+      `;
+    }
   });
 }
 
@@ -219,6 +262,7 @@ function completeNotification(index) {
       if (notif.action === "water") plants[plantIndex].watered = true;
       if (notif.action === "pesticide") plants[plantIndex].pesticide = true;
       if (notif.action === "fertilizer") plants[plantIndex].fertilizer = true;
+      if (notif.action === "move") plants[plantIndex].moved = true;
     }
 
     localStorage.setItem(
